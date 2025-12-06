@@ -1,27 +1,24 @@
 import { test, expect } from '@playwright/test';
 
-const HOST = 'https://servineo.app'; // URL Produccion
-// const HOST = 'https://servineo-frontend-bytes-bandidos.vercel.app';
-// const HOST = 'http://localhost:3000';
+const HOST = 'https://servineo.app';
 
 const TRACKING_URL = `${HOST}/es/tracking-appointments`;
 
 test('TC - Verificar consulta de citas en un rango de tiempo definido en tracking-appointments', async ({ page }) => {
   await page.goto(TRACKING_URL, { waitUntil: 'networkidle' });
 
-  await page.fill(
-    '[data-testid="filter-date-from"]',
-    '2025-11-01'
-  );
-  await page.fill(
-    '[data-testid="filter-date-to"]',
-    '2025-12-31'
-  );
+  const fromDateInput = page.locator('input[type="date"]').first();
+  await fromDateInput.fill('2025-11-01');
+  const toDateInput = page.locator('input[type="date"]').first();
+  await toDateInput.fill('2025-12-31');
 
-  const mapPins = page.locator('[title="map-pin"]');
-  const totalLabel = page.locator('[data-testid="appointments-total"]');
-
-  const pinCount = await mapPins.count();
+  const totalLabel = page.locator(
+    'body > div.w-full.min-h-screen.bg-gray-50.pb-10 > div > div.grid.grid-cols-1.lg\\:grid-cols-4.gap-6.lg\\:h-\\[550px\\] > div.lg\\:col-span-1.h-full.flex.flex-col.gap-6 > div > div > div.bg-white.shadow-sm.rounded.p-4.border-l-4.border-blue-500 > p'
+  );
+  const markerPane = page.locator(
+    'body > div.w-full.min-h-screen.bg-gray-50.pb-10 > div > div.grid.grid-cols-1.lg\\:grid-cols-4.gap-6.lg\\:h-\\[550px\\] > div.lg\\:col-span-3.bg-white.rounded-xl.shadow.border.border-gray-200.overflow-hidden.relative.z-0.h-\\[400px\\].lg\\:h-full > div > div > div.leaflet-pane.leaflet-map-pane > div.leaflet-pane.leaflet-marker-pane'
+  );
+  const pinCount = await markerPane.locator('img').count();
 
   const totalText = await totalLabel.innerText();
   const match = totalText.match(/\d+/);
@@ -32,24 +29,22 @@ test('TC - Verificar consulta de citas en un rango de tiempo definido en trackin
 test('TC - Verificar consulta de citas cuando no hay registros en el rango', async ({ page }) => {
   await page.goto(TRACKING_URL);
 
-  await page.fill(
-    '[data-testid="filter-date-from"]',
-    '2030-01-01'
-  );
-  await page.fill(
-    '[data-testid="filter-date-to"]',
-    '2030-01-31'
-  );
+  const fromDateInput = page.locator('input[type="date"]').first();
+  await fromDateInput.fill('2030-01-01');
+  const toDateInput = page.locator('input[type="date"]').first();
+  await toDateInput.fill('2030-01-31');
 
-  const mapPins = page.locator('[title="map-pin"]');
-  const totalLabel = page.locator('[data-testid="appointments-total"]');
-  const emptyMsg = page.locator('[data-testid="appointments-empty-state"]');
-
-  const pinCount = await mapPins.count();
+  const totalLabel = page.locator(
+    'body > div.w-full.min-h-screen.bg-gray-50.pb-10 > div > div.grid.grid-cols-1.lg\\:grid-cols-4.gap-6.lg\\:h-\\[550px\\] > div.lg\\:col-span-1.h-full.flex.flex-col.gap-6 > div > div > div.bg-white.shadow-sm.rounded.p-4.border-l-4.border-blue-500 > p'
+  );
+  const markerPane = page.locator(
+    'body > div.w-full.min-h-screen.bg-gray-50.pb-10 > div > div.grid.grid-cols-1.lg\\:grid-cols-4.gap-6.lg\\:h-\\[550px\\] > div.lg\\:col-span-3.bg-white.rounded-xl.shadow.border.border-gray-200.overflow-hidden.relative.z-0.h-\\[400px\\].lg\\:h-full > div > div > div.leaflet-pane.leaflet-map-pane > div.leaflet-pane.leaflet-marker-pane'
+  );
+  const pinCount = await markerPane.locator('img').count();
 
   expect(pinCount).not.toBeNull();
 
-  await expect(mapPins).toHaveCount(0);
+  await expect(pinCount).toBe(0);
 
   await expect(totalLabel).toBeVisible();
   const totalText = await totalLabel.innerText();
